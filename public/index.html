@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>/blind/ - Encrypted Imageboard</title>
+  <style>
+    /* Classic 2000s imageboard aesthetic */
+    body {
+      font-family: arial, helvetica, sans-serif;
+      font-size: 10pt;
+      background-color: #FFFFEE;
+      color: #800000;
+      margin: 0;
+      padding: 8px;
+    }
+
+    a { color: #0000EE; }
+    a:visited { color: #551A8B; }
+
+    .logo {
+      text-align: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #D9BFB7;
+    }
+
+    .logo h1 {
+      font-size: 28pt;
+      font-weight: bold;
+      letter-spacing: -1px;
+      margin: 0;
+      color: #800000;
+      font-family: Tahoma, sans-serif;
+    }
+
+    .logo .subtitle {
+      font-size: 8pt;
+      color: #707070;
+      font-style: italic;
+    }
+
+    .postarea {
+      text-align: center;
+      padding: 10px;
+      background-color: #F0E0D6;
+      border: 1px solid #D9BFB7;
+      margin: 10px auto;
+      max-width: 600px;
+    }
+
+    .postarea table {
+      margin: 0 auto;
+    }
+
+    .postarea td {
+      padding: 2px;
+      text-align: left;
+    }
+
+    .postarea input[type="text"],
+    .postarea textarea {
+      font-family: arial, helvetica, sans-serif;
+      font-size: 10pt;
+      border: 1px solid #AAA;
+    }
+
+    .postarea textarea {
+      width: 350px;
+      height: 100px;
+    }
+
+    .postarea input[type="submit"] {
+      font-size: 10pt;
+      padding: 2px 8px;
+      cursor: pointer;
+    }
+
+    .postarea .identity-info {
+      font-size: 8pt;
+      color: #707070;
+      margin-top: 8px;
+    }
+
+    .postarea .identity-info code {
+      background: #FFF;
+      padding: 1px 3px;
+      border: 1px solid #CCC;
+      font-size: 7pt;
+      word-break: break-all;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid #D9BFB7;
+      height: 0;
+    }
+
+    .thread {
+      margin: 8px 0;
+      padding: 8px;
+      background-color: #F0E0D6;
+      border: 1px solid #D9BFB7;
+      overflow: hidden;
+    }
+
+    .thread.encrypted {
+      background-color: #E8E8E8;
+      border-color: #BBB;
+    }
+
+    .post-header {
+      font-size: 9pt;
+    }
+
+    .post-header .name {
+      color: #117743;
+      font-weight: bold;
+    }
+
+    .post-header .tripcode {
+      color: #228854;
+    }
+
+    .post-header .date {
+      color: #707070;
+    }
+
+    .post-header .postnum {
+      color: #800000;
+    }
+
+    .post-body {
+      padding: 8px 0;
+      word-wrap: break-word;
+    }
+
+    .post-body.encrypted-blob {
+      font-family: monospace;
+      font-size: 8pt;
+      color: #666;
+      background: #DDD;
+      padding: 8px;
+      max-height: 60px;
+      overflow: hidden;
+      word-break: break-all;
+    }
+
+    .share-link {
+      font-size: 8pt;
+      background: #FFFFCC;
+      border: 1px dashed #CC0;
+      padding: 6px;
+      margin-top: 8px;
+    }
+
+    .share-link input {
+      width: 100%;
+      font-family: monospace;
+      font-size: 8pt;
+      border: 1px solid #AAA;
+      padding: 2px;
+    }
+
+    .share-link .warning {
+      color: #C00;
+      font-weight: bold;
+    }
+
+    .decrypt-section {
+      margin-top: 8px;
+      padding: 6px;
+      background: #DDEEFF;
+      border: 1px solid #AAC;
+      font-size: 9pt;
+    }
+
+    .decrypt-section input {
+      font-family: monospace;
+      font-size: 8pt;
+      width: 200px;
+    }
+
+    .decrypt-section button {
+      font-size: 8pt;
+      padding: 1px 6px;
+      cursor: pointer;
+    }
+
+    .error {
+      color: #C00;
+      font-weight: bold;
+    }
+
+    .success {
+      color: #070;
+    }
+
+    .nav {
+      text-align: center;
+      padding: 8px;
+      font-size: 9pt;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 8pt;
+      color: #707070;
+      padding: 20px;
+      border-top: 1px solid #D9BFB7;
+      margin-top: 20px;
+    }
+
+    .footer a {
+      color: #707070;
+    }
+
+    .wot-controls {
+      background: #FFEEDD;
+      border: 1px solid #D9BFB7;
+      padding: 6px;
+      margin: 10px auto;
+      max-width: 600px;
+      font-size: 9pt;
+    }
+
+    .wot-controls summary {
+      cursor: pointer;
+      color: #800000;
+    }
+
+    .blocked-list {
+      font-family: monospace;
+      font-size: 8pt;
+      color: #666;
+      max-height: 60px;
+      overflow-y: auto;
+    }
+
+    .btn-block {
+      font-size: 7pt;
+      color: #C00;
+      cursor: pointer;
+      margin-left: 4px;
+    }
+
+    .btn-block:hover {
+      text-decoration: underline;
+    }
+
+    #posts-container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .status-bar {
+      background: #800000;
+      color: #FFF;
+      padding: 4px 8px;
+      font-size: 8pt;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+    }
+
+    .greentext {
+      color: #789922;
+    }
+
+    .sig-valid {
+      color: #070;
+      font-size: 8pt;
+    }
+
+    .sig-invalid {
+      color: #C00;
+      font-size: 8pt;
+    }
+
+    /* Cypherpunk flair */
+    .crypto-badge {
+      display: inline-block;
+      background: #333;
+      color: #0F0;
+      font-family: monospace;
+      font-size: 7pt;
+      padding: 1px 4px;
+      margin-left: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="logo">
+  <h1>/blind/</h1>
+  <div class="subtitle">the server can't read this - plausible deniability imageboard</div>
+</div>
+
+<div class="nav">
+  [<a href="#" onclick="loadPosts(); return false;">Refresh</a>]
+  [<a href="#" onclick="generateNewIdentity(); return false;">New Identity</a>]
+  [<a href="#" onclick="toggleWoT(); return false;">Web of Trust</a>]
+</div>
+
+<div class="postarea">
+  <form id="post-form" onsubmit="submitPost(event)">
+    <table>
+      <tr>
+        <td>Name</td>
+        <td>
+          <input type="text" id="post-name" value="Anonymous" size="28">
+          <span class="crypto-badge">E2E ENCRYPTED</span>
+        </td>
+      </tr>
+      <tr>
+        <td>Comment</td>
+        <td><textarea id="post-content" placeholder="Your message will be encrypted locally before sending..."></textarea></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td><input type="submit" value="Post"></td>
+      </tr>
+    </table>
+    <div class="identity-info">
+      Your pubkey: <code id="my-pubkey">generating...</code>
+    </div>
+  </form>
+</div>
+
+<div class="wot-controls" id="wot-panel" style="display:none;">
+  <details open>
+    <summary><b>Web of Trust Settings</b></summary>
+    <p>Blocked pubkeys (posts hidden before decryption):</p>
+    <div class="blocked-list" id="blocked-list">None</div>
+    <p style="margin-top:8px;">
+      <input type="text" id="block-input" placeholder="Paste pubkey to block" size="40">
+      <button onclick="addBlock()">Block</button>
+    </p>
+  </details>
+</div>
+
+<hr>
+
+<div id="share-result" style="display:none;" class="postarea share-link">
+  <b class="warning">!! SAVE THIS LINK - IT CONTAINS THE DECRYPTION KEY !!</b><br><br>
+  <input type="text" id="share-url" readonly onclick="this.select()">
+  <p style="font-size:8pt; color:#666; margin-top:6px;">
+    The server CANNOT decrypt this post. Only people with this link can read it.<br>
+    The key is in the URL fragment (#) which browsers never send to servers.
+  </p>
+</div>
+
+<div id="posts-container">
+  <div style="text-align:center; padding:20px; color:#707070;">Loading posts...</div>
+</div>
+
+<div class="footer">
+  - <a href="https://en.wikipedia.org/wiki/Cypherpunk">cypherpunk</a> tech demo -<br>
+  all content encrypted client-side | server stores only ciphertext<br>
+  <span style="font-family:monospace; font-size:7pt;">tweetnacl.js (XSalsa20-Poly1305 + Ed25519)</span>
+</div>
+
+<div class="status-bar" id="status-bar">Ready - No keys in URL fragment</div>
+
+<!-- TweetNaCl.js from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/tweetnacl@1.0.3/nacl-fast.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tweetnacl-util@0.15.1/nacl-util.min.js"></script>
+
+<script>
+// ============================================================================
+// CRYPTO UTILITIES (inline version of client/cryptoLogic.ts)
+// ============================================================================
+
+const CryptoUtils = {
+  bytesToBase64(bytes) {
+    return nacl.util.encodeBase64(bytes);
+  },
+
+  base64ToBytes(base64) {
+    return nacl.util.decodeBase64(base64);
+  },
+
+  stringToBytes(str) {
+    return nacl.util.decodeUTF8(str);
+  },
+
+  bytesToString(bytes) {
+    return nacl.util.encodeUTF8(bytes);
+  },
+
+  generateIdentityKeypair() {
+    const keypair = nacl.sign.keyPair();
+    return {
+      publicKey: this.bytesToBase64(keypair.publicKey),
+      privateKey: this.bytesToBase64(keypair.secretKey)
+    };
+  },
+
+  preparePost(content, identity, authorName = 'Anonymous') {
+    // Generate random symmetric key
+    const symmetricKey = nacl.randomBytes(nacl.secretbox.keyLength);
+    const nonce = nacl.randomBytes(nacl.secretbox.nonceLength);
+
+    // Encrypt content (include author name in payload)
+    const payload = JSON.stringify({ name: authorName, text: content });
+    const contentBytes = this.stringToBytes(payload);
+    const ciphertext = nacl.secretbox(contentBytes, nonce, symmetricKey);
+
+    // Sign the ciphertext
+    const privateKey = this.base64ToBytes(identity.privateKey);
+    const signature = nacl.sign.detached(ciphertext, privateKey);
+
+    return {
+      payload: {
+        ciphertext: this.bytesToBase64(ciphertext),
+        nonce: this.bytesToBase64(nonce),
+        authorPublicKey: identity.publicKey,
+        signature: this.bytesToBase64(signature)
+      },
+      urlFragment: '#key=' + encodeURIComponent(this.bytesToBase64(symmetricKey)),
+      symmetricKey: this.bytesToBase64(symmetricKey)
+    };
+  },
+
+  decryptPost(encryptedPayload, symmetricKeyBase64) {
+    const ciphertext = this.base64ToBytes(encryptedPayload.ciphertext);
+    const nonce = this.base64ToBytes(encryptedPayload.nonce);
+    const authorPublicKey = this.base64ToBytes(encryptedPayload.authorPublicKey);
+    const signature = this.base64ToBytes(encryptedPayload.signature);
+    const symmetricKey = this.base64ToBytes(symmetricKeyBase64);
+
+    // Verify signature
+    const signatureValid = nacl.sign.detached.verify(ciphertext, signature, authorPublicKey);
+
+    // Decrypt
+    const decrypted = nacl.secretbox.open(ciphertext, nonce, symmetricKey);
+    if (!decrypted) {
+      throw new Error('Decryption failed');
+    }
+
+    const content = this.bytesToString(decrypted);
+    let parsed;
+    try {
+      parsed = JSON.parse(content);
+    } catch {
+      parsed = { name: 'Anonymous', text: content };
+    }
+
+    return {
+      encryptedPayload,
+      content: parsed.text || content,
+      authorName: parsed.name || 'Anonymous',
+      signatureValid
+    };
+  },
+
+  extractKeyFromFragment(fragment) {
+    const clean = fragment.startsWith('#') ? fragment.slice(1) : fragment;
+    const params = new URLSearchParams(clean);
+    const key = params.get('key');
+    return key ? decodeURIComponent(key) : null;
+  }
+};
+
+// ============================================================================
+// APPLICATION STATE
+// ============================================================================
+
+let myIdentity = null;
+let blockedPubkeys = [];
+let decryptionKeys = new Map(); // postId -> key
+
+// Load identity from localStorage or generate new one
+function loadOrCreateIdentity() {
+  const stored = localStorage.getItem('blindchan_identity');
+  if (stored) {
+    myIdentity = JSON.parse(stored);
+  } else {
+    generateNewIdentity();
+  }
+  updateIdentityDisplay();
+}
+
+function generateNewIdentity() {
+  myIdentity = CryptoUtils.generateIdentityKeypair();
+  localStorage.setItem('blindchan_identity', JSON.stringify(myIdentity));
+  updateIdentityDisplay();
+  setStatus('New identity generated');
+}
+
+function updateIdentityDisplay() {
+  const pubkeyEl = document.getElementById('my-pubkey');
+  pubkeyEl.textContent = myIdentity.publicKey.substring(0, 16) + '...';
+  pubkeyEl.title = myIdentity.publicKey;
+}
+
+// ============================================================================
+// WEB OF TRUST
+// ============================================================================
+
+function loadBlockedList() {
+  const stored = localStorage.getItem('blindchan_blocked');
+  blockedPubkeys = stored ? JSON.parse(stored) : [];
+  renderBlockedList();
+}
+
+function saveBlockedList() {
+  localStorage.setItem('blindchan_blocked', JSON.stringify(blockedPubkeys));
+}
+
+function renderBlockedList() {
+  const el = document.getElementById('blocked-list');
+  if (blockedPubkeys.length === 0) {
+    el.textContent = 'None';
+  } else {
+    el.innerHTML = blockedPubkeys.map((pk, i) =>
+      `${pk.substring(0, 20)}... <span class="btn-block" onclick="removeBlock(${i})">[unblock]</span>`
+    ).join('<br>');
+  }
+}
+
+function addBlock() {
+  const input = document.getElementById('block-input');
+  const pubkey = input.value.trim();
+  if (pubkey && !blockedPubkeys.includes(pubkey)) {
+    blockedPubkeys.push(pubkey);
+    saveBlockedList();
+    renderBlockedList();
+    loadPosts();
+  }
+  input.value = '';
+}
+
+function removeBlock(index) {
+  blockedPubkeys.splice(index, 1);
+  saveBlockedList();
+  renderBlockedList();
+  loadPosts();
+}
+
+function toggleWoT() {
+  const panel = document.getElementById('wot-panel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+// ============================================================================
+// POSTING
+// ============================================================================
+
+async function submitPost(event) {
+  event.preventDefault();
+
+  const content = document.getElementById('post-content').value.trim();
+  const authorName = document.getElementById('post-name').value.trim() || 'Anonymous';
+
+  if (!content) {
+    setStatus('Error: Please enter a message');
+    return;
+  }
+
+  setStatus('Encrypting and posting...');
+
+  try {
+    const { payload, urlFragment, symmetricKey } = CryptoUtils.preparePost(content, myIdentity, authorName);
+
+    const response = await fetch('/api/publish', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || 'Failed to post');
+    }
+
+    const result = await response.json();
+    const postId = result.id;
+
+    // Store the key locally so we can see our own post
+    decryptionKeys.set(postId, symmetricKey);
+    localStorage.setItem('blindchan_keys', JSON.stringify([...decryptionKeys]));
+
+    // Show the shareable link
+    const shareUrl = window.location.origin + '/post/' + postId + urlFragment;
+    document.getElementById('share-url').value = shareUrl;
+    document.getElementById('share-result').style.display = 'block';
+
+    // Clear form and reload
+    document.getElementById('post-content').value = '';
+    setStatus('Posted! ID: ' + postId);
+    loadPosts();
+
+  } catch (err) {
+    setStatus('Error: ' + err.message);
+  }
+}
+
+// ============================================================================
+// LOADING POSTS
+// ============================================================================
+
+async function loadPosts() {
+  const container = document.getElementById('posts-container');
+
+  try {
+    const response = await fetch('/api/posts');
+    const { posts } = await response.json();
+
+    // Filter blocked users (before decryption!)
+    const filtered = posts.filter(p => !blockedPubkeys.includes(p.authorPublicKey));
+
+    if (filtered.length === 0) {
+      container.innerHTML = '<div style="text-align:center; padding:20px; color:#707070;">No posts yet. Be the first!</div>';
+      return;
+    }
+
+    // Sort by timestamp descending (newest first)
+    filtered.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    container.innerHTML = filtered.map(post => renderPost(post)).join('');
+    setStatus(`Loaded ${filtered.length} posts (${posts.length - filtered.length} blocked)`);
+
+  } catch (err) {
+    container.innerHTML = '<div class="error">Failed to load posts: ' + err.message + '</div>';
+    setStatus('Error loading posts');
+  }
+}
+
+function renderPost(post) {
+  const key = decryptionKeys.get(post.id);
+  const shortPubkey = post.authorPublicKey.substring(0, 12);
+  const isMe = post.authorPublicKey === myIdentity.publicKey;
+  const dateStr = new Date(post.timestamp).toLocaleString();
+
+  if (key) {
+    // We have the key - decrypt it
+    try {
+      const decrypted = CryptoUtils.decryptPost(post, key);
+      const sigStatus = decrypted.signatureValid
+        ? '<span class="sig-valid">[sig: valid]</span>'
+        : '<span class="sig-invalid">[sig: INVALID]</span>';
+
+      return `
+        <div class="thread">
+          <div class="post-header">
+            <span class="name">${escapeHtml(decrypted.authorName)}</span>
+            <span class="tripcode">!${shortPubkey}</span>
+            ${isMe ? '<span class="crypto-badge">YOU</span>' : ''}
+            ${sigStatus}
+            <span class="date">${dateStr}</span>
+            <span class="postnum">No.${post.id}</span>
+            <span class="btn-block" onclick="blockUser('${post.authorPublicKey}')">[block]</span>
+          </div>
+          <div class="post-body">${formatContent(decrypted.content)}</div>
+        </div>
+      `;
+    } catch (err) {
+      // Decryption failed - show as encrypted
+    }
+  }
+
+  // No key or decryption failed - show encrypted view
+  return `
+    <div class="thread encrypted">
+      <div class="post-header">
+        <span class="name" style="color:#666;">???</span>
+        <span class="tripcode" style="color:#888;">!${shortPubkey}</span>
+        ${isMe ? '<span class="crypto-badge">YOU</span>' : ''}
+        <span class="date">${dateStr}</span>
+        <span class="postnum">No.${post.id}</span>
+        <span class="btn-block" onclick="blockUser('${post.authorPublicKey}')">[block]</span>
+      </div>
+      <div class="post-body encrypted-blob">${post.ciphertext.substring(0, 200)}...</div>
+      <div class="decrypt-section">
+        <b>Encrypted</b> - Enter key to decrypt:<br>
+        <input type="text" id="key-${post.id}" placeholder="Paste decryption key">
+        <button onclick="tryDecrypt('${post.id}')">Decrypt</button>
+      </div>
+    </div>
+  `;
+}
+
+function tryDecrypt(postId) {
+  const input = document.getElementById('key-' + postId);
+  const key = input.value.trim();
+
+  if (key) {
+    decryptionKeys.set(postId, key);
+    localStorage.setItem('blindchan_keys', JSON.stringify([...decryptionKeys]));
+    loadPosts();
+  }
+}
+
+function blockUser(pubkey) {
+  if (!blockedPubkeys.includes(pubkey)) {
+    blockedPubkeys.push(pubkey);
+    saveBlockedList();
+    renderBlockedList();
+    loadPosts();
+    setStatus('User blocked');
+  }
+}
+
+// ============================================================================
+// UTILITIES
+// ============================================================================
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function formatContent(text) {
+  // Basic imageboard-style formatting
+  return escapeHtml(text)
+    .split('\n')
+    .map(line => {
+      if (line.startsWith('&gt;')) {
+        return '<span class="greentext">' + line + '</span>';
+      }
+      return line;
+    })
+    .join('<br>');
+}
+
+function setStatus(msg) {
+  document.getElementById('status-bar').textContent = msg;
+}
+
+// Load stored keys
+function loadStoredKeys() {
+  const stored = localStorage.getItem('blindchan_keys');
+  if (stored) {
+    decryptionKeys = new Map(JSON.parse(stored));
+  }
+}
+
+// Check URL fragment for key
+function checkUrlFragment() {
+  const hash = window.location.hash;
+  if (hash) {
+    const key = CryptoUtils.extractKeyFromFragment(hash);
+    if (key) {
+      setStatus('Key found in URL - will attempt decryption');
+      // Try to find matching post - for now just store for any post
+      // In production, postId would be in URL path
+    }
+  }
+}
+
+// ============================================================================
+// INIT
+// ============================================================================
+
+window.onload = function() {
+  loadOrCreateIdentity();
+  loadBlockedList();
+  loadStoredKeys();
+  checkUrlFragment();
+  loadPosts();
+};
+</script>
+
+</body>
+</html>

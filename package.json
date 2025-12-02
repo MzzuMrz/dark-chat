@@ -1,0 +1,22 @@
+{
+  "name": "blind-imageboard",
+  "version": "1.0.0",
+  "description": "Cypherpunk blind relay imageboard with plausible deniability",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server/index.js",
+    "dev": "tsx server/index.ts",
+    "test": "tsx test/integration.ts"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "tweetnacl": "^1.0.3"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^24.10.1",
+    "tsx": "^4.6.0",
+    "typescript": "^5.9.3"
+  }
+}
